@@ -1,0 +1,198 @@
+# Base R Programming
+
+### Taylor Cesarski
+
+## Basic Vector Practice
+
+*Create a vector of pre-treatment values for subjects 1-20.*
+  
+```{r}
+pre_bp <- c(130,128,116,124,133,134,118,126,114,127,141,138,128,140,137,131,120,128,139,135)
+```
+
+*Create a vector of post-treatment values for subjects 1-20.*
+  
+```{r}
+post_bp <- c(114,98,113,99,107,116,113,111,119,117,101,119,130,122,106,106,124,102,117,113)
+```
+
+*Assign names to vector elements. I am using the paste feature to join together subject and their number separated by the _ *
+  
+```{r}
+patient <- paste("Subject", 1:20, sep="_")
+names(pre_bp) <- patient
+names(post_bp) <- patient
+```
+
+*Calculate the change in blood pressure for each patient by doing pre-treatment - post-treatment. Here I created a new vector called diff_bp to represent the difference.*
+  
+```{r}
+diff_bp <- pre_bp - post_bp
+```
+
+*Calculate the average decrease in blood pressure across all patients.*
+  
+```{r}
+mean(diff_bp)
+```
+
+*Determine which patients experienced a decrease in blood pressure after treatment using which() function.*
+  
+```{r}
+which(diff_bp > 0)
+```
+
+*Subset the vector of differences to only return those that have a positive change. I then printed it to check that it is subsetting correctly.*
+  
+```{r}
+positive_change <- diff_bp[which(diff_bp > 0)]
+positive_change
+```
+
+*Calculate the average decrease in blood pressure for those where the blood pressure decreased.*
+  
+```{r}
+mean(positive_change)
+```
+
+## Basic Data Frame Practice
+
+*Create a data frame object with the data above. Print to check that it is printing correctly. I created a data frame with the pre_bp, post_bp, and diff_bp. There are already subject names through all of these vectors having identical names.*
+```{r}
+bp_df <- data.frame(pre_bp,
+                    post_bp,
+                    diff_bp)
+bp_df
+```
+*Return only rows where diff_bp column is negative. I used the subset function on the bp_df to do this.*
+```{r}
+subset(bp_df, diff_bp <0)
+```
+
+*Add a new column corresponding to true if the post_bp is less than 120. I created a new vector called low bp which determined if this was true by looking at the post_bp column of the bp_df dataframe being less than 120. Then I added another column to the bp_df using the new vector I created. Then I checked to make sure the column was printing correctly.*
+```{r}
+lowbp <- bp_df$post_bp < 120
+bp_df$lowbp <- lowbp
+bp_df
+```
+*Print out the dataframe nicely in final document. This is taking the kable function from the knitr package.*
+```{r}
+knitr::kable(bp_df)
+```
+## List Practice
+
+*Create a new data frame with this data in it from the new subjects. Add the new column as well. I first created vectors for pre-treatment values for the placebo group and post-treatment values for the placebo group. Then I created a vector of the difference by subtracting the post-treatment from the pre-treatment. I assigned them names using the `names()` function. Finally, I created the data frame with the new vectors that I created.*
+```{r}
+pre_placebo <- c(138,135,147,117,152,134,114,121,131,130)
+post_placebo <- c(105,136,123,130,134,143,135,139,120,124)
+pre_placebo
+post_placebo
+
+placebo_diff = pre_placebo - post_placebo
+placebo_diff
+
+patientnames <- paste("Placebo Subject", 1:10, sep="_")
+names(pre_placebo) <- patientnames
+names(post_placebo) <- patientnames
+
+placebo_df <- data.frame(pre_placebo,
+                         post_placebo,
+                         placebo_diff)
+placebo_df
+
+less120bp <- placebo_df$post_placebo < 120
+
+placebo_df$less120bp <- less120bp
+placebo_df
+```
+
+*Create a list with two elements. I created a new list called df_list (since it is a list of dataframes) that has the bp_df in the first element of the list (that I named treatment) and the placebo_df as the second element of the list (which I named placebo).*
+```{r}
+df_list <- list(treatment = bp_df, placebo = placebo_df)
+df_list
+```
+
+*Access the first list element using three different types of syntax. Note: I wasn't sure if the first two items counted separately even though they return different structures so I accessed it in four ways.*
+
+```{r}
+df_list[1]
+df_list[[1]]
+df_list[-2]
+df_list$treatment
+```
+
+*In one line, access the placebo data frame, pre_bp column. I used the $ to start at my_list then access the placebo data frame and then the pre_placebo column.*
+```{r}
+df_list$placebo$pre_placebo
+```
+## Control Flow Practice
+*Create a new column in each data frame called status. Create a for loop and use if/then/else logic to create the status columns values. Then repeat for the placebo data frame. I first used the given code to create the status columns. Then I created a for loop just for the bp_df to iterate 20 times since there are 20 observations. I then assigned the ith element of the status column of the bp_df based on what the post_bp was. If it was less than or equal to 120, I wanted to return optimal. If it was between 120 and 130 I wanted to return borderline. If it was greater than 130, I wanted to return high. I didn't explicity tell it greater than 130 because if it doesn't fall in the other two categories then it has to be greater than 130. I then copied and pasted that code for the placebo data frame but I only iterated from 1 to 10 since there were only 10 placebo subjects.*
+
+```{r}
+bp_df$status <- character(20)
+placebo_df$status <- character(10)
+
+for(i in 1:20){
+  if(bp_df$post_bp[i] <= 120) { 
+  bp_df$status[i] <- "Optimal"
+} else if (bp_df$post_bp[i] <= 130){
+  bp_df$status[i]<- "Borderline"
+} else {
+  bp_df$status[i]<- "High"
+}
+}
+bp_df
+```
+
+```{r}
+for(i in 1:10){
+  if(placebo_df$post_placebo[i] <= 120) { 
+  placebo_df$status[i] <- "Optimal"
+} else if (placebo_df$post_placebo[i] <= 130){
+  placebo_df$status[i]<- "Borderline"
+} else {
+  placebo_df$status[i]<- "High"
+}
+}
+placebo_df
+
+```
+## Function Writing
+*I wrote a function called get_summary_stats that takes in a list and can compute summary statistics on numeric columns of two dataframes within a list and return them as a list of six with meaningful names. I set the default to mean by using `stat="mean"`. I first made empty lists to store the results called treatment_list and placebo_list. I opted to make two lists and then combine them as one list at the end to make it easier to generate names for the next step. I used the `my_fun=get(stat)` provided to get the input given by the user. Then I focused just on the treatment df which corresponds to the first dataframe. Because I was only focusing on the treatment df at first, I kept the first bracket of input_list as 1 since I was always looking at the first dataframe in the list. Then I only wanted columns 1-3 of that dataframe because those are the numeric ones. Then I applied the function generated by the `my_fun=get(stat)` and stored each result as the ith element in the treatment_list that I had created. I did the exact same thing with the placebo df, but changing the first input of the list to 2 since I was focusing on the second dataframe. To create the names, I created them separately for the treatment and placebo lists so that I could keep that element constant. I created a vector called treatment_names that has three elements in it. I used the paste feature to paste together "pre", "post" and "diff" with "treatment" since these all came from the first dataframe. Then, I added the stat that would be taken from user input and specified the space with the `sep` argument. I then assigned the names using the names() function and then I repeated the same thing with getting the names of the placebo list. I then combined the lists together because the question asked to return a single list with six elements and I originally had two lists of three elements.*
+```{r}
+get_summary_stats <- function(input_list, stat="mean") {
+  treatment_list <- list()
+  placebo_list <- list()
+  my_fun <- get(stat)
+  
+  for(i in seq_along(input_list[[1]][1:3])) {
+    treatment_list[[i]] <- my_fun(input_list[[1]][[i]])
+  }
+  for(i in seq_along(input_list[[2]][1:3])) {
+    placebo_list[[i]] <- my_fun(input_list[[2]][[i]]) 
+  }
+  treatment_names <-  c(paste("pre", "treatment", stat, sep = " "),
+  paste("post", "treatment", stat, sep = " "),
+  paste("diff", "treatment", stat, sep = " "))
+  
+ names(treatment_list) <- treatment_names
+ 
+ placebo_names <-  c(paste("pre", "placebo", stat, sep = " "),
+  paste("post", "placebo", stat, sep = " "),
+  paste("diff", "placebo", stat, sep = " "))
+ 
+ names(placebo_list) <- placebo_names
+   
+ combo_list <- c(treatment_list,placebo_list)
+ return(combo_list)
+}
+```
+*I then tried out the function without a default which used the mean and then by specifying other statistics to use.*
+
+```{r}
+get_summary_stats(df_list)
+get_summary_stats(df_list, "var")
+get_summary_stats(df_list, "sd")
+get_summary_stats(df_list, "min")
+get_summary_stats(df_list, "max")
+```
